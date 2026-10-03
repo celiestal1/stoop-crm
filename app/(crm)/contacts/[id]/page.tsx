@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { addTask, logActivity, markReplied, updateContact } from "../../actions";
+import { addDealDate, addDeal, addTask, deleteContact, logActivity, markReplied, updateContact } from "../../actions";
 import { Composer } from "@/components/Composer";
 import { ScoreButton } from "@/components/ScoreButton";
 import { TaskCheck } from "@/components/TaskCheck";
-import { CONTACT_STATUSES, CONTACT_TYPES, dialable, fullName, label, money, when } from "@/lib/format";
+import { CONTACT_STATUSES, CONTACT_TYPES, DEADLINES, day, dialable, fullName, label, money, when } from "@/lib/format";
 import { getSession } from "@/lib/session";
 
 const ICON: Record<string, string> = { call: "📞", email: "✉️", text: "💬", note: "📝", showing: "🏠", meeting: "🤝", ai: "✨" };
@@ -19,7 +19,7 @@ export default async function ContactPage({ params }: { params: Promise<{ id: st
     supabase.from("activities").select("id, type, body, created_at").eq("contact_id", id).order("created_at", { ascending: false }).limit(50),
     supabase.from("messages").select("id, channel, direction, subject, body, summary, created_at").eq("contact_id", id).order("created_at", { ascending: false }).limit(30),
     supabase.from("tasks").select("id, title, due_at, done").eq("contact_id", id).order("done").order("due_at"),
-    supabase.from("deals").select("id, title, price, pipeline_stages(name)").eq("contact_id", id),
+    supabase.from("deals").select("id, title, price, pipeline_stages(name), deal_dates(id, label, due_date, completed)").eq("contact_id", id),
     supabase.from("integrations").select("status").eq("user_id", user.id).eq("provider", "google").maybeSingle(),
   ]);
   if (!c) notFound();
@@ -141,15 +141,58 @@ export default async function ContactPage({ params }: { params: Promise<{ id: st
 
           <section className="card">
             <h2 className="h2">Deals</h2>
-            <ul className="mt-2 space-y-1 text-sm">
-              {(deals ?? []).map((d) => (
-                <li key={d.id}>
-                  {d.title} · {money(d.price)}{" "}
-                  <span className="pill">{(d.pipeline_stages as unknown as { name: string } | null)?.name ?? "No stage"}</span>
-                </li>
-              ))}
-              {!deals?.length && <li className="text-slate-500">No deals yet. Add one from the pipeline.</li>}
+            <ul className="mt-2 space-y-3 text-sm">
+              {(deals ?? []).map((d) => {
+                const dates = (d.deal_dates as unknown as { id: string; label: string; due_date: string; completed: boolean }[]) ?? [];
+                return (
+                  <li key={d.id}>
+                    <p>
+                      {d.title} · {money(d.price)}{" "}
+                      <span className="pill">{(d.pipeline_stages as unknown as { name: string } | null)?.name ?? "No stage"}</span>
+                    </p>
+                    {dates.length > 0 && (
+                      <ul className="mt-1 space-y-0.5 text-xs text-slate-600">
+                        {dates
+                          .sort((a, b) => a.due_date.localeCompare(b.due_date))
+                          .map((x) => (
+                            <li key={x.id} className={x.completed ? "line-through" : ""}>
+                              {x.label}: {day(x.due_date)}
+                            </li>
+                          ))}
+                      </ul>
+                    )}
+                    <details className="mt-1">
+                      <summary className="cursor-pointer text-xs underline">+ Contract deadline</summary>
+                      <form action={addDealDate.bind(null, d.id)} className="mt-2 flex flex-wrap gap-2">
+                        <select name="label" className="input w-auto text-xs">
+                          {DEADLINES.map((x) => <option key={x}>{x}</option>)}
+                        </select>
+                        <input name="due_date" type="date" required className="input w-auto text-xs" />
+                        <button className="btn-ghost px-2 py-1 text-xs">Add</button>
+                      </form>
+                    </details>
+                  </li>
+                );
+              })}
+              {!deals?.length && <li className="text-slate-500">No deals yet.</li>}
             </ul>
+            <details className="mt-3">
+              <summary className="cursor-pointer text-sm font-medium underline">+ New deal</summary>
+              <form action={addDeal} className="mt-3 space-y-2">
+                <input type="hidden" name="contact_id" value={id} />
+                <input name="title" required placeholder="Address or buyer search" className="input" />
+                <div className="flex gap-2">
+                  <select name="deal_type" className="input" defaultValue={c.contact_type === "seller" ? "listing" : "buyer"}>
+                    <option value="buyer">Buyer</option>
+                    <option value="listing">Listing</option>
+                  </select>
+                  <input name="price" inputMode="numeric" placeholder="Price" className="input" />
+                </div>
+                <label className="field-label">Expected close</label>
+                <input name="expected_close_date" type="date" className="input" />
+                <button className="btn-primary w-full">Create deal</button>
+              </form>
+            </details>
           </section>
 
           <form action={update} className="card space-y-3">
@@ -181,6 +224,14 @@ export default async function ContactPage({ params }: { params: Promise<{ id: st
             <textarea name="notes" defaultValue={c.notes ?? ""} rows={4} placeholder="Notes" className="input" />
             <button className="btn-primary w-full">Save details</button>
           </form>
+
+          <details className="text-right">
+            <summary className="cursor-pointer list-none text-xs text-slate-500 hover:text-red-600">Delete contact</summary>
+            <form action={deleteContact.bind(null, id)} className="mt-2">
+              <p className="mb-2 text-xs text-slate-500">This also deletes their activity, tasks and emails. Deals stay in the pipeline.</p>
+              <button className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white">Yes, delete</button>
+            </form>
+          </details>
         </div>
       </div>
     </div>

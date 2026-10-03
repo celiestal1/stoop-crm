@@ -34,6 +34,14 @@ export function dialable(phone: string | null | undefined) {
 
 export const CONTACT_TYPES = ["buyer", "seller", "buyer_seller", "investor", "renter", "past_client", "sphere", "vendor"] as const;
 export const CONTACT_STATUSES = ["new", "contacted", "nurture", "active", "closed", "lost"] as const;
+export const DEADLINES = [
+  "Inspection",
+  "Appraisal",
+  "Financing / mortgage commitment",
+  "Attorney review",
+  "Final walkthrough",
+  "Closing",
+] as const;
 export const PROPERTY_STATUSES = ["coming_soon", "active", "pending", "sold", "withdrawn"] as const;
 
 // "2026-10-03T14:30" typed in the workspace's time zone, as a UTC ISO string.

@@ -90,6 +90,15 @@ export async function logActivity(contactId: string, formData: FormData) {
   revalidatePath("/today");
 }
 
+// Activity, tasks and messages go with the contact; their deals stay in the pipeline.
+export async function deleteContact(contactId: string) {
+  const { supabase } = await getSession();
+  const { error } = await supabase.from("contacts").delete().eq("id", contactId);
+  if (error) throw new Error(error.message);
+  revalidatePath("/today");
+  redirect("/contacts");
+}
+
 export async function markReplied(contactId: string) {
   const { supabase } = await getSession();
   await supabase.from("contacts").update({ needs_reply: false }).eq("id", contactId);
@@ -157,17 +166,24 @@ export async function addDeal(formData: FormData) {
   const { supabase, orgId, user } = await getSession();
   const title = text(formData, "title");
   if (!title) return;
+  let stageId = text(formData, "stage_id");
+  if (!stageId) {
+    const { data: first } = await supabase.from("pipeline_stages").select("id").order("position").limit(1).maybeSingle();
+    stageId = first?.id ?? null;
+  }
+  const contactId = text(formData, "contact_id");
   const { error } = await supabase.from("deals").insert({
     org_id: orgId,
     title,
     deal_type: text(formData, "deal_type") ?? "buyer",
-    contact_id: text(formData, "contact_id"),
-    stage_id: text(formData, "stage_id"),
+    contact_id: contactId,
+    stage_id: stageId,
     price: num(formData, "price"),
     expected_close_date: text(formData, "expected_close_date"),
     assigned_to: user.id,
   });
   if (error) throw new Error(error.message);
+  if (contactId) revalidatePath(`/contacts/${contactId}`);
   revalidatePath("/pipeline");
   revalidatePath("/today");
 }
@@ -180,6 +196,17 @@ export async function moveDeal(dealId: string, stageId: string) {
     .update({ stage_id: stageId, closed_at: stage?.is_won ? new Date().toISOString() : null, updated_at: new Date().toISOString() })
     .eq("id", dealId);
   revalidatePath("/pipeline");
+  revalidatePath("/today");
+}
+
+export async function addDealDate(dealId: string, formData: FormData) {
+  const { supabase, orgId } = await getSession();
+  const labelText = text(formData, "label");
+  const dueDate = text(formData, "due_date");
+  if (!labelText || !dueDate) return;
+  const { error } = await supabase.from("deal_dates").insert({ org_id: orgId, deal_id: dealId, label: labelText, due_date: dueDate });
+  if (error) throw new Error(error.message);
+  revalidatePath("/contacts", "layout");
   revalidatePath("/today");
 }
 
