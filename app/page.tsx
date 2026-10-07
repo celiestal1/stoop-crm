@@ -108,7 +108,11 @@ export default function Home() {
       <footer className="bg-navy py-10 text-sm text-slate-300">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4">
           <Logo light />
-          <span>© {new Date().getFullYear()} Stoop · hello@stoopcrm.com</span>
+          <span className="flex flex-wrap gap-x-4 gap-y-1">
+            <Link href="/privacy" className="hover:text-white">Privacy</Link>
+            <Link href="/terms" className="hover:text-white">Terms</Link>
+            <span>© {new Date().getFullYear()} Stoop · hello@stoopcrm.com</span>
+          </span>
         </div>
       </footer>
     </div>

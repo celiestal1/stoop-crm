@@ -22,7 +22,10 @@ export default async function Contacts({ searchParams }: { searchParams: Promise
 
   return (
     <div className="space-y-6">
-      <h1 className="h1">Contacts</h1>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="h1">Contacts</h1>
+        <Link href="/contacts/import" className="btn-ghost">Import</Link>
+      </div>
 
       <form className="flex flex-wrap gap-2">
         <input name="q" defaultValue={q} placeholder="Search name, email or phone" className="input max-w-xs" />
