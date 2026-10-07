@@ -17,11 +17,13 @@ Open http://localhost:3000, create an account, and name your workspace.
 ## What's here
 
 - `/today`: who is waiting on a reply, tasks due, contract deadlines, pipeline totals, and a Reconnect Google alert.
+- `/contacts/import`: bring in contacts from a CSV (Excel, Google Contacts) or vCard (iPhone), skipping anyone already in the workspace.
 - `/contacts` and `/contacts/[id]`: search, add, edit; email from Gmail or text from your own phone, with Draft with AI; log calls, texts and notes; tasks; lead score.
 - `/pipeline`: drag deals between stages (a stage menu on phones).
 - `/listings`: listings with AI-written descriptions.
 - `/settings`: Google connection, your business phone number, the website lead form, team invite links.
 - `/invite/[token]`: accept a team invite.
+- `/privacy` and `/terms`: public legal pages (Google's consent screen links to the privacy policy).
 
 ## Backend
 

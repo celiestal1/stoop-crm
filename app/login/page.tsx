@@ -76,6 +76,10 @@ export default function LoginPage() {
             {mode === "signin" ? "New to Stoop? Create an account" : "Already have an account? Sign in"}
           </button>
         </form>
+        <p className="mt-4 text-center text-xs text-slate-500">
+          By continuing you agree to our <Link href="/terms" className="underline">Terms</Link> and{" "}
+          <Link href="/privacy" className="underline">Privacy Policy</Link>.
+        </p>
       </div>
     </main>
   );

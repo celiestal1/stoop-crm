@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { zonedToIso } from "@/lib/format";
+import { type ImportRow, phoneDigits } from "@/lib/contactImport";
+import { CONTACT_TYPES, zonedToIso } from "@/lib/format";
 import { getSession } from "@/lib/session";
 
 const text = (f: FormData, k: string) => {
@@ -45,6 +46,72 @@ export async function addContact(formData: FormData) {
     .single();
   if (error) throw new Error(error.message);
   redirect(`/contacts/${data.id}`);
+}
+
+const MAX_IMPORT = 5000;
+
+// Adds contacts from an imported file, skipping anyone already in the workspace
+// (same email or phone) and repeats within the file.
+export async function importContacts(rows: ImportRow[], defaultType: string) {
+  const { supabase, orgId, user } = await getSession();
+  if (!Array.isArray(rows) || rows.length > MAX_IMPORT) {
+    return { error: `Import up to ${MAX_IMPORT.toLocaleString()} contacts at a time.` };
+  }
+  const types = CONTACT_TYPES as readonly string[];
+  const fallbackType = types.includes(defaultType) ? defaultType : "buyer";
+
+  const { data: existing, error: readError } = await supabase
+    .from("contacts")
+    .select("email, phone")
+    .eq("org_id", orgId)
+    .limit(50000);
+  if (readError) return { error: readError.message };
+  const emails = new Set((existing ?? []).map((c) => c.email?.toLowerCase()).filter(Boolean));
+  const phones = new Set((existing ?? []).map((c) => phoneDigits(c.phone)).filter((p) => p.length >= 7));
+
+  const clean = (v: unknown, max = 500) => {
+    const t = String(v ?? "").trim().slice(0, max);
+    return t || null;
+  };
+  let skipped = 0;
+  const inserts = [];
+  for (const r of rows) {
+    const email = clean(r.email, 320)?.toLowerCase() ?? null;
+    const phone = clean(r.phone, 40);
+    const digits = phoneDigits(phone);
+    const first = clean(r.first_name, 100);
+    const last = clean(r.last_name, 100);
+    if (!first && !last && !email && !phone) continue;
+    if ((email && emails.has(email)) || (digits.length >= 7 && phones.has(digits))) {
+      skipped++;
+      continue;
+    }
+    if (email) emails.add(email);
+    if (digits.length >= 7) phones.add(digits);
+    const type = clean(r.contact_type, 40)?.toLowerCase().replace(/[\s/&-]+/g, "_") ?? "";
+    inserts.push({
+      org_id: orgId,
+      first_name: first,
+      last_name: last,
+      email,
+      phone,
+      contact_type: types.includes(type) ? type : fallbackType,
+      source: clean(r.source, 100) ?? "import",
+      notes: clean(r.notes, 5000),
+      assigned_to: user.id,
+    });
+  }
+
+  for (let i = 0; i < inserts.length; i += 500) {
+    const { error } = await supabase.from("contacts").insert(inserts.slice(i, i + 500));
+    if (error) {
+      revalidatePath("/contacts");
+      return { error: error.message, added: i, skipped };
+    }
+  }
+  revalidatePath("/contacts");
+  revalidatePath("/today");
+  return { added: inserts.length, skipped };
 }
 
 export async function updateContact(id: string, formData: FormData) {
