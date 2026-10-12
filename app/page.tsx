@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
+import { ContactCard } from "@/components/ContactBuilder";
+import { BUILDER, SERVICES } from "@/lib/builder";
 
 const FEATURES = [
   {
@@ -34,8 +36,11 @@ export default function Home() {
       <header className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5">
         <Logo />
         <nav className="flex items-center gap-3 text-sm">
-          <a href="#pricing" className="hidden text-slate-600 hover:text-navy sm:inline">
-            Pricing
+          <a href="#services" className="hidden text-slate-600 hover:text-navy sm:inline">
+            Services
+          </a>
+          <a href="#contact" className="hidden text-slate-600 hover:text-navy sm:inline">
+            Contact
           </a>
           <Link href="/login" className="btn-ghost">
             Sign in
@@ -55,7 +60,7 @@ export default function Home() {
           client, deal and deadline in one place. Never leave a lead waiting on the stoop.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
-          <a href="mailto:hello@stoopcrm.com?subject=Founding%20agent%20pilot" className="btn-amber px-6 py-3 text-base">
+          <a href={`mailto:${BUILDER.email}?subject=Founding%20agent%20pilot`} className="btn-amber px-6 py-3 text-base">
             Become a founding agent
           </a>
           <Link href="/login" className="btn-ghost px-6 py-3 text-base">
@@ -76,33 +81,25 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="pricing" className="mx-auto max-w-6xl px-4 py-16">
-        <h2 className="font-display text-3xl font-bold">Simple pricing</h2>
-        <div className="mt-8 grid gap-6 md:grid-cols-2">
-          <div className="card">
-            <h3 className="h2">Setup</h3>
-            <p className="mt-2 font-display text-3xl font-bold">[$ price]</p>
-            <p className="mt-2 text-sm text-slate-600">
-              One time. Contact import, Gmail and calendar connection, website lead form, and training.
-            </p>
-          </div>
-          <div className="card">
-            <h3 className="h2">Per agent</h3>
-            <p className="mt-2 font-display text-3xl font-bold">
-              [$ price]<span className="text-base font-normal text-slate-500"> / month</span>
-            </p>
-            <p className="mt-2 text-sm text-slate-600">Everything in Stoop, including AI replies and lead capture.</p>
-          </div>
+      <section id="services" className="mx-auto max-w-6xl px-4 py-16">
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Beyond real estate</p>
+        <h2 className="mt-1 font-display text-3xl font-bold">What I build for businesses</h2>
+        <p className="mt-3 max-w-2xl text-slate-600">
+          Stoop is one example. I build software and digital tools for small businesses in any industry, made around
+          how you already work.
+        </p>
+        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {SERVICES.map((s) => (
+            <div key={s.title} className="card">
+              <h3 className="h2">{s.title}</h3>
+              <p className="mt-2 text-sm text-slate-600">{s.body}</p>
+            </div>
+          ))}
         </div>
-        <div className="mt-6 rounded-xl bg-navy p-6 text-white">
-          <h3 className="font-display text-xl font-semibold">Founding agents: 30 days free</h3>
-          <p className="mt-2 text-sm text-slate-200">
-            We are taking a few agents for a free 30-day pilot in exchange for honest feedback.
-          </p>
-          <a href="mailto:hello@stoopcrm.com?subject=Founding%20agent%20pilot" className="btn-amber mt-4">
-            Apply for the pilot
-          </a>
-        </div>
+      </section>
+
+      <section id="contact" className="mx-auto max-w-6xl px-4 pb-16">
+        <ContactCard />
       </section>
 
       <footer className="bg-navy py-10 text-sm text-slate-300">
@@ -111,7 +108,7 @@ export default function Home() {
           <span className="flex flex-wrap gap-x-4 gap-y-1">
             <Link href="/privacy" className="hover:text-white">Privacy</Link>
             <Link href="/terms" className="hover:text-white">Terms</Link>
-            <span>© {new Date().getFullYear()} Stoop · hello@stoopcrm.com</span>
+            <span>© {new Date().getFullYear()} Stoop · {BUILDER.email}</span>
           </span>
         </div>
       </footer>
