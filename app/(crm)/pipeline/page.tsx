@@ -1,10 +1,11 @@
 import { addDeal } from "../actions";
 import { PipelineBoard } from "@/components/PipelineBoard";
 import { fullName } from "@/lib/format";
+import { region } from "@/lib/region";
 import { getSession } from "@/lib/session";
 
 export default async function Pipeline() {
-  const { supabase } = await getSession();
+  const { supabase, org } = await getSession();
   const [{ data: stages }, { data: deals }, { data: contacts }] = await Promise.all([
     supabase.from("pipeline_stages").select("id, name").order("position"),
     supabase.from("deals").select("id, title, price, stage_id, deal_type, contact_id, contacts(first_name, last_name)").order("updated_at", { ascending: false }),
@@ -25,7 +26,7 @@ export default async function Pipeline() {
     <div className="space-y-6">
       <h1 className="h1">Pipeline</h1>
       <p className="hidden text-sm text-slate-500 md:block">Drag a deal to move it to another stage.</p>
-      <PipelineBoard stages={stages ?? []} deals={rows} />
+      <PipelineBoard stages={stages ?? []} deals={rows} currency={region(org.country).currency} />
 
       <form action={addDeal} className="card grid gap-3 sm:grid-cols-3">
         <h2 className="h2 sm:col-span-3">Add a deal</h2>

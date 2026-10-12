@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { importContacts } from "@/app/(crm)/actions";
-import { guessMapping, IMPORT_FIELDS, type ImportField, type Mapping, parseCsv, parseVcf, toRows } from "@/lib/contactImport";
+import { guessMapping, IMPORT_FIELDS, type ImportField, type Mapping, toRows } from "@/lib/contactImport";
+import { readTable } from "@/lib/sheets";
 import { CONTACT_TYPES, label } from "@/lib/format";
 
 export function ContactImport() {
@@ -23,12 +24,11 @@ export function ContactImport() {
     setResult(null);
     setTable([]);
     if (!file) return;
-    if (/\.(xlsx|xls|numbers)$/i.test(file.name)) {
-      setError("Save the spreadsheet as CSV first (File → Save As → CSV), then choose that file.");
+    const { table: parsed, error } = await readTable(file);
+    if (error || !parsed) {
+      setError(error ?? "That file couldn't be read.");
       return;
     }
-    const text = await file.text();
-    const parsed = /\.vcf$/i.test(file.name) || /^\s*BEGIN:VCARD/i.test(text) ? parseVcf(text) : parseCsv(text);
     if (parsed.length < 2) {
       setError("That file has no contacts in it.");
       return;
@@ -79,8 +79,8 @@ export function ContactImport() {
       <div className="card space-y-3">
         <h2 className="h2">1. Choose a file</h2>
         <p className="text-sm text-slate-600">
-          A CSV from Excel or Google Contacts, or a vCard (.vcf) from iPhone Contacts. The first row of a CSV should be
-          column names.
+          An Excel file (.xlsx), a CSV from Google Contacts or another CRM, or a vCard (.vcf) from iPhone Contacts. The
+          first row of a spreadsheet should be column names.
         </p>
         <input
           type="file"

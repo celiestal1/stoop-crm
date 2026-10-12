@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { Logo } from "@/components/Logo";
+import { type Country, REGIONS } from "@/lib/region";
 import { createClient } from "@/lib/supabase/server";
 
 async function createWorkspace(formData: FormData) {
@@ -7,8 +8,12 @@ async function createWorkspace(formData: FormData) {
   const name = String(formData.get("name") ?? "").trim();
   if (!name) return;
   const supabase = await createClient();
-  const { error } = await supabase.rpc("create_organization", { org_name: name });
+  const { data: orgId, error } = await supabase.rpc("create_organization", { org_name: name });
   if (error) throw new Error(error.message);
+  const country = String(formData.get("country") ?? "US") as Country;
+  if (country !== "US" && country in REGIONS && orgId) {
+    await supabase.from("organizations").update({ country, timezone: REGIONS[country].timezone }).eq("id", orgId);
+  }
   redirect("/settings?welcome=1");
 }
 
@@ -28,6 +33,14 @@ export default async function Onboarding() {
         <h1 className="h1">Name your workspace</h1>
         <p className="text-sm text-slate-600">Usually your name or your team&apos;s name. You can change it later. Joining a team? Open the invite link they sent you instead.</p>
         <input name="name" required className="input" placeholder="e.g. Rams Real Estate" />
+        <label className="block text-sm text-slate-600">
+          Where do you work?
+          <select name="country" defaultValue="US" className="input mt-1">
+            {Object.entries(REGIONS).map(([code, r]) => (
+              <option key={code} value={code}>{r.label}</option>
+            ))}
+          </select>
+        </label>
         <button className="btn-primary w-full">Continue</button>
       </form>
     </main>
