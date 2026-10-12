@@ -14,7 +14,7 @@ async function createWorkspace(formData: FormData) {
   if (country !== "US" && country in REGIONS && orgId) {
     await supabase.from("organizations").update({ country, timezone: REGIONS[country].timezone }).eq("id", orgId);
   }
-  redirect("/settings?welcome=1");
+  redirect("/connect");
 }
 
 export default async function Onboarding() {

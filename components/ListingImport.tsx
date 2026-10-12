@@ -13,9 +13,9 @@ const MODES: { key: Mode; label: string; hint: string }[] = [
   { key: "file", label: "Upload a spreadsheet", hint: "An Excel (.xlsx) or CSV file with one listing per row. Any column names work." },
 ];
 
-export function ListingImport({ currency, area }: { currency: string; area: string }) {
+export function ListingImport({ currency, area, initialUrl = "" }: { currency: string; area: string; initialUrl?: string }) {
   const [mode, setMode] = useState<Mode>("link");
-  const [url, setUrl] = useState("");
+  const [url, setUrl] = useState(initialUrl);
   const [text, setText] = useState("");
   const [drafts, setDrafts] = useState<ListingDraft[]>([]);
   const [picked, setPicked] = useState<boolean[]>([]);

@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { inviteAgent, renameWorkspace, saveBusinessPhone, saveCountry } from "../actions";
 import { GoogleConnect } from "@/components/GoogleConnect";
 import { REGIONS, region } from "@/lib/region";
+import { leadFormCode } from "@/lib/leadForm";
 import { getSession } from "@/lib/session";
 
 const GOOGLE_RESULT: Record<string, string> = {
@@ -28,22 +29,14 @@ export default async function Settings({ searchParams }: { searchParams: Promise
   const origin = `${h.get("x-forwarded-proto") ?? "https"}://${h.get("host")}`;
   const { data: phones } = await supabase.from("agent_settings").select("user_id, business_phone").eq("org_id", orgId);
   const phoneOf = (id: string) => phones?.find((p) => p.user_id === id)?.business_phone;
-  const leadUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/lead-intake?key=${org.lead_key}`;
-  const formCode = `<form action="${leadUrl}" method="POST">
-  <input name="name" placeholder="Your name" required>
-  <input name="email" type="email" placeholder="Email">
-  <input name="phone" placeholder="Phone">
-  <textarea name="message" placeholder="How can I help?"></textarea>
-  <input name="website_url" style="display:none" tabindex="-1" autocomplete="off">
-  <button type="submit">Send</button>
-</form>`;
+  const { leadUrl, formCode } = leadFormCode(org.lead_key);
 
   return (
     <div className="space-y-6">
       <h1 className="h1">Settings</h1>
       {welcome && (
         <div className="rounded-xl border border-amber bg-amber-soft p-4 text-sm">
-          Welcome to Stoop. Connect Google and add your business number below, then you&apos;re ready.
+          Welcome to Stoop. Connect Google below, then you&apos;re ready.
         </div>
       )}
       {googleResult && GOOGLE_RESULT[googleResult] && (

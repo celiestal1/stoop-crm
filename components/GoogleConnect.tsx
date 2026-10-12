@@ -3,14 +3,14 @@
 import { useState, useTransition } from "react";
 import { disconnectGoogle, startGoogle } from "@/app/(crm)/actions";
 
-export function GoogleConnect({ status, account }: { status: string | null; account: string | null }) {
+export function GoogleConnect({ status, account, returnTo = "/settings" }: { status: string | null; account: string | null; returnTo?: string }) {
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
   const connect = () =>
     start(async () => {
       setError(null);
-      const r = await startGoogle(`${window.location.origin}/settings`);
+      const r = await startGoogle(`${window.location.origin}${returnTo}`);
       if ("error" in r) setError(r.error ?? "Couldn't start Google sign-in.");
       else window.location.href = r.url;
     });
