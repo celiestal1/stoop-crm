@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
+  // Google sign-in lands here too; new accounts continue to /onboarding from /today.
   if (code) {
     const supabase = await createClient();
     await supabase.auth.exchangeCodeForSession(code);

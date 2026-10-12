@@ -397,6 +397,25 @@ export async function importListings(drafts: ListingDraft[]) {
   return { added: rows.length };
 }
 
+export async function saveWebsite(formData: FormData) {
+  const { supabase, orgId } = await getSession();
+  let url = text(formData, "website_url");
+  if (url && !/^https?:\/\//i.test(url)) url = `https://${url}`;
+  try {
+    if (url) new URL(url);
+  } catch {
+    return;
+  }
+  await supabase.from("organizations").update({ website_url: url }).eq("id", orgId);
+  revalidatePath("/", "layout");
+}
+
+export async function setLeadAlerts(on: boolean) {
+  const { supabase, orgId } = await getSession();
+  await supabase.from("organizations").update({ lead_alerts: on }).eq("id", orgId);
+  revalidatePath("/connect");
+}
+
 export async function renameWorkspace(formData: FormData) {
   const { supabase, orgId } = await getSession();
   const name = text(formData, "name");

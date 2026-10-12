@@ -54,6 +54,12 @@ export default async function Today() {
     <div className="space-y-6">
       <h1 className="h1">Today</h1>
 
+      {!org.website_url && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber bg-amber-soft p-4">
+          <p className="text-sm font-medium">Connect your website to bring in your listings and get inquiries here.</p>
+          <Link href="/connect" className="btn-primary">Connect your website</Link>
+        </div>
+      )}
       {googleNeedsReconnect && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber bg-amber-soft p-4">
           <p className="text-sm font-medium">Your Google connection expired, so new emails aren&apos;t coming in.</p>

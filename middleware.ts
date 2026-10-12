@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const APP_PATHS = ["/today", "/contacts", "/pipeline", "/listings", "/settings", "/services", "/onboarding"];
+const APP_PATHS = ["/today", "/contacts", "/pipeline", "/listings", "/settings", "/services", "/connect", "/onboarding"];
 
 // Keeps the Supabase session fresh and sends signed-out visitors to /login.
 export async function middleware(request: NextRequest) {
