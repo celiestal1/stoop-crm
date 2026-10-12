@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { DealDateCheck } from "@/components/DealDateCheck";
 import { TaskCheck } from "@/components/TaskCheck";
+import { ContactButtons } from "@/components/ContactBuilder";
+import { BUILDER, SERVICES } from "@/lib/builder";
 import { day, fullName, money, when, zonedToIso } from "@/lib/format";
 import { getSession } from "@/lib/session";
 
@@ -138,6 +140,31 @@ export default async function Today() {
           )}
         </section>
       </div>
+
+      <section className="rounded-xl bg-navy p-5 text-white">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-amber">My services</p>
+            <h2 className="mt-1 font-display text-xl font-semibold">Want software like this for your business?</h2>
+            <p className="mt-1 text-sm text-slate-300">
+              {BUILDER.name} · <a className="underline" href={`mailto:${BUILDER.email}`}>{BUILDER.email}</a> ·{" "}
+              <a className="underline" href={BUILDER.phoneHref}>{BUILDER.phone}</a>
+            </p>
+          </div>
+          <Link href="/services" className="text-sm text-white underline">See everything I offer</Link>
+        </div>
+        <ul className="mt-4 grid gap-2 text-sm text-slate-200 sm:grid-cols-2 lg:grid-cols-3">
+          {SERVICES.map((s) => (
+            <li key={s.title} className="flex items-center gap-2">
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber" />
+              {s.title}
+            </li>
+          ))}
+        </ul>
+        <div className="mt-5">
+          <ContactButtons light />
+        </div>
+      </section>
 
       <section className="card">
         <div className="flex items-center justify-between">
