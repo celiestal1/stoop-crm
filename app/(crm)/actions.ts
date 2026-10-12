@@ -3,19 +3,27 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { type ImportRow, phoneDigits } from "@/lib/contactImport";
-import { CONTACT_TYPES, zonedToIso } from "@/lib/format";
+import { CONTACT_TYPES, PROPERTY_STATUSES, zonedToIso } from "@/lib/format";
+import { type Country, REGIONS } from "@/lib/region";
 import { getSession } from "@/lib/session";
 
 const text = (f: FormData, k: string) => {
   const v = String(f.get(k) ?? "").trim();
   return v || null;
 };
-const num = (f: FormData, k: string) => {
-  const v = text(f, k);
-  if (!v) return null;
-  const n = Number(v.replace(/[$,\s]/g, ""));
+const num = (f: FormData, k: string) => toNumber(text(f, k));
+
+// "$1,250,000", "¥45,000,000", "4,500万円" and "1.2億" all become plain numbers.
+function toNumber(v: unknown) {
+  if (v === null || v === undefined || v === "") return null;
+  if (typeof v === "number") return Number.isFinite(v) ? v : null;
+  let s = String(v).replace(/[$¥,\s円]/g, "");
+  let scale = 1;
+  if (/億$/.test(s)) [s, scale] = [s.slice(0, -1), 1e8];
+  else if (/万$/.test(s)) [s, scale] = [s.slice(0, -1), 1e4];
+  const n = Number(s) * scale;
   return Number.isFinite(n) ? n : null;
-};
+}
 
 // Error messages from the backend functions come back in the response body.
 async function fnError(error: unknown) {
@@ -292,7 +300,7 @@ export async function addListing(formData: FormData) {
     org_id: orgId,
     address,
     city: text(formData, "city"),
-    state: text(formData, "state") ?? "NY",
+    state: text(formData, "state"),
     zip: text(formData, "zip"),
     list_price: num(formData, "list_price"),
     beds: num(formData, "beds"),
@@ -331,6 +339,62 @@ export async function saveBusinessPhone(formData: FormData) {
   });
   if (error) throw new Error(error.message);
   revalidatePath("/settings");
+}
+
+export async function saveCountry(formData: FormData) {
+  const { supabase, orgId } = await getSession();
+  const country = text(formData, "country") as Country | null;
+  if (!country || !(country in REGIONS)) return;
+  await supabase.from("organizations").update({ country, timezone: REGIONS[country].timezone }).eq("id", orgId);
+  revalidatePath("/", "layout");
+}
+
+export type ListingDraft = {
+  address: string;
+  city?: string | null;
+  zip?: string | null;
+  list_price?: number | string | null;
+  beds?: number | string | null;
+  baths?: number | string | null;
+  sqft?: number | string | null;
+  property_type?: string | null;
+  status?: string | null;
+  description?: string | null;
+};
+
+// Reads listings out of a web page, pasted text or a spreadsheet with AI.
+export async function extractListings(input: { url?: string; text?: string }) {
+  const { supabase } = await getSession();
+  const { data, error } = await supabase.functions.invoke("ai", {
+    body: { action: "extract_listings", url: input.url?.trim() || undefined, text: input.text?.slice(0, 60000) || undefined },
+  });
+  if (error) return { error: await fnError(error) };
+  return { listings: (data?.listings ?? []) as ListingDraft[] };
+}
+
+export async function importListings(drafts: ListingDraft[]) {
+  const { supabase, orgId } = await getSession();
+  const rows = drafts
+    .filter((d) => d.address?.trim())
+    .slice(0, 200)
+    .map((d) => ({
+      org_id: orgId,
+      address: d.address.trim(),
+      city: d.city || null,
+      zip: d.zip || null,
+      list_price: toNumber(d.list_price),
+      beds: toNumber(d.beds) === null ? null : Math.round(toNumber(d.beds)!),
+      baths: toNumber(d.baths),
+      sqft: toNumber(d.sqft) === null ? null : Math.round(toNumber(d.sqft)!),
+      property_type: d.property_type || null,
+      status: d.status && (PROPERTY_STATUSES as readonly string[]).includes(d.status) ? d.status : "active",
+      description: d.description || null,
+    }));
+  if (!rows.length) return { added: 0 };
+  const { error } = await supabase.from("properties").insert(rows);
+  if (error) return { error: error.message };
+  revalidatePath("/listings");
+  return { added: rows.length };
 }
 
 export async function renameWorkspace(formData: FormData) {

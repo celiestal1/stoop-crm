@@ -8,7 +8,7 @@ import { money } from "@/lib/format";
 type Stage = { id: string; name: string };
 type Deal = { id: string; title: string; price: number | null; stage_id: string | null; contact_id: string | null; contact_name: string | null; deal_type: string };
 
-export function PipelineBoard({ stages, deals }: { stages: Stage[]; deals: Deal[] }) {
+export function PipelineBoard({ stages, deals, currency }: { stages: Stage[]; deals: Deal[]; currency: string }) {
   const [, start] = useTransition();
   const [board, move] = useOptimistic(deals, (state, { id, stageId }: { id: string; stageId: string }) =>
     state.map((d) => (d.id === id ? { ...d, stage_id: stageId } : d)),
@@ -39,7 +39,7 @@ export function PipelineBoard({ stages, deals }: { stages: Stage[]; deals: Deal[
             <div className="mb-3">
               <p className="text-sm font-semibold">{s.name}</p>
               <p className="text-xs text-slate-500">
-                {inStage.length} · {money(total) || "$0"}
+                {inStage.length} · {money(total, currency)}
               </p>
             </div>
             <div className="min-h-16 space-y-2">
@@ -52,7 +52,7 @@ export function PipelineBoard({ stages, deals }: { stages: Stage[]; deals: Deal[
                 >
                   <p className="font-medium">{d.title}</p>
                   <p className="text-xs text-slate-500">
-                    {d.deal_type === "listing" ? "Listing" : "Buyer"} · {money(d.price)}
+                    {d.deal_type === "listing" ? "Listing" : "Buyer"} · {money(d.price, currency)}
                   </p>
                   {d.contact_id && (
                     <Link href={`/contacts/${d.contact_id}`} className="text-xs underline">

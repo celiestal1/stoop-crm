@@ -5,6 +5,7 @@ import { Composer } from "@/components/Composer";
 import { ScoreButton } from "@/components/ScoreButton";
 import { TaskCheck } from "@/components/TaskCheck";
 import { CONTACT_STATUSES, CONTACT_TYPES, DEADLINES, day, dialable, fullName, label, money, when } from "@/lib/format";
+import { region } from "@/lib/region";
 import { getSession } from "@/lib/session";
 
 const ICON: Record<string, string> = { call: "📞", email: "✉️", text: "💬", note: "📝", showing: "🏠", meeting: "🤝", ai: "✨" };
@@ -147,7 +148,7 @@ export default async function ContactPage({ params }: { params: Promise<{ id: st
                 return (
                   <li key={d.id}>
                     <p>
-                      {d.title} · {money(d.price)}{" "}
+                      {d.title} · {money(d.price, region(org.country).currency)}{" "}
                       <span className="pill">{(d.pipeline_stages as unknown as { name: string } | null)?.name ?? "No stage"}</span>
                     </p>
                     {dates.length > 0 && (

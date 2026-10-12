@@ -5,9 +5,9 @@ export function fullName(c: ContactName | null | undefined) {
   return [c.first_name, c.last_name].filter(Boolean).join(" ") || "Unnamed contact";
 }
 
-export function money(n: number | string | null | undefined) {
+export function money(n: number | string | null | undefined, currency = "USD") {
   if (n === null || n === undefined || n === "") return "";
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(Number(n));
+  return new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 0 }).format(Number(n));
 }
 
 export function when(iso: string | null | undefined, tz = "America/New_York") {

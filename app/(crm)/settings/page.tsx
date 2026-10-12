@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
-import { inviteAgent, renameWorkspace, saveBusinessPhone } from "../actions";
+import { inviteAgent, renameWorkspace, saveBusinessPhone, saveCountry } from "../actions";
 import { GoogleConnect } from "@/components/GoogleConnect";
+import { REGIONS, region } from "@/lib/region";
 import { getSession } from "@/lib/session";
 
 const GOOGLE_RESULT: Record<string, string> = {
@@ -55,14 +56,14 @@ export default async function Settings({ searchParams }: { searchParams: Promise
       </section>
 
       <section id="phone" className="card space-y-3">
-        <h2 className="h2">Your business phone</h2>
+        <h2 className="h2">Your business phone <span className="text-sm font-normal text-slate-500">(optional)</span></h2>
         <p className="text-sm text-slate-600">
           Keep the number your clients already have. Calls and texts go from your own phone: tap Call or Text on any
           contact and your phone opens with the number ready. Log each call or text on the contact so the timeline
           stays complete. Your team sees this number on the Team list.
         </p>
         <form action={saveBusinessPhone} className="flex flex-wrap gap-2">
-          <input name="business_phone" defaultValue={phone?.business_phone ?? ""} placeholder="(212) 555-0100" className="input max-w-xs" />
+          <input name="business_phone" defaultValue={phone?.business_phone ?? ""} placeholder={region(org.country).phonePlaceholder} className="input max-w-xs" />
           <select name="business_phone_type" defaultValue={phone?.business_phone_type ?? "cell"} className="input w-auto">
             <option value="cell">Cell</option>
             <option value="office">Office line</option>
@@ -118,6 +119,16 @@ export default async function Settings({ searchParams }: { searchParams: Promise
           <input name="name" defaultValue={org.name} className="input max-w-xs" />
           <button className="btn-ghost">Rename</button>
         </form>
+        <form action={saveCountry} className="flex flex-wrap items-center gap-2">
+          <label htmlFor="country" className="text-sm text-slate-600">Country</label>
+          <select id="country" name="country" defaultValue={org.country ?? "US"} className="input w-auto">
+            {Object.entries(REGIONS).map(([code, r]) => (
+              <option key={code} value={code}>{r.label} ({r.currency}, {r.timezone.split("/")[1].replace("_", " ")} time)</option>
+            ))}
+          </select>
+          <button className="btn-ghost">Save</button>
+        </form>
+        <p className="text-xs text-slate-500">Sets your currency, time zone and the labels on listings.</p>
         <form action="/auth/signout" method="post">
           <button className="text-sm underline">Sign out</button>
         </form>

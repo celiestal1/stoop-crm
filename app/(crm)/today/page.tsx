@@ -4,11 +4,13 @@ import { TaskCheck } from "@/components/TaskCheck";
 import { ContactButtons } from "@/components/ContactBuilder";
 import { BUILDER, SERVICES } from "@/lib/builder";
 import { day, fullName, money, when, zonedToIso } from "@/lib/format";
+import { region } from "@/lib/region";
 import { getSession } from "@/lib/session";
 
 export default async function Today() {
   const { supabase, user, org } = await getSession();
   const tz = org.timezone || "America/New_York";
+  const { currency } = region(org.country);
   const todayLocal = new Intl.DateTimeFormat("en-CA", { timeZone: tz }).format(new Date());
   const endOfToday = new Date(zonedToIso(`${todayLocal}T23:59`, tz) ?? Date.now());
   const twoWeeks = new Date(Date.now() + 14 * 864e5).toISOString().slice(0, 10);
@@ -175,7 +177,7 @@ export default async function Today() {
           {totals.map((t) => (
             <div key={t.name} className="rounded-lg bg-sidewalk p-3">
               <p className="text-xs text-slate-500">{t.name}</p>
-              <p className="font-display text-lg font-semibold">{money(t.value) || "$0"}</p>
+              <p className="font-display text-lg font-semibold">{money(t.value, currency)}</p>
               <p className="text-xs text-slate-500">{t.count} deal{t.count === 1 ? "" : "s"}</p>
             </div>
           ))}
