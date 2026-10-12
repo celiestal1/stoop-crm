@@ -148,7 +148,7 @@ export default async function Today() {
             <h2 className="mt-1 font-display text-xl font-semibold">Want software like this for your business?</h2>
             <p className="mt-1 text-sm text-slate-300">
               {BUILDER.name} · <a className="underline" href={`mailto:${BUILDER.email}`}>{BUILDER.email}</a> ·{" "}
-              <a className="underline" href={BUILDER.phoneHref}>{BUILDER.phone}</a>
+              <a className="underline" href={BUILDER.phoneHref}>{BUILDER.phone}</a> · {BUILDER.rate}
             </p>
           </div>
           <Link href="/services" className="text-sm text-white underline">See everything I offer</Link>

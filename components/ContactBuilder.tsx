@@ -26,6 +26,8 @@ export function ContactDetails({ light = false }: { light?: boolean }) {
       <dd>
         <a className={link} href={BUILDER.phoneHref}>{BUILDER.phone}</a>
       </dd>
+      <dt className={muted}>Rate</dt>
+      <dd>{BUILDER.rate}</dd>
     </dl>
   );
 }

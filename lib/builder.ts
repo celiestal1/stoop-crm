@@ -5,6 +5,7 @@ export const BUILDER = {
   email: "williamarjmand@gmail.com",
   phone: "+1 (737) 770-9797",
   phoneHref: "tel:+17377709797",
+  rate: "$300 per month + $300 one-time setup fee",
 };
 
 export const CALL_HREF = `mailto:${BUILDER.email}?subject=${encodeURIComponent(
@@ -44,7 +45,7 @@ export const SERVICES = [
 
 export const STEPS = [
   { title: "A 15-minute call", body: "You tell me what takes up the most time or what you'd like to improve." },
-  { title: "A clear plan", body: "I suggest a few ideas and we agree on the scope and price up front, so there are no surprises." },
+  { title: "A clear plan", body: "I suggest a few ideas and we agree on the scope up front. My rate is $300 per month plus a one-time $300 setup fee, so there are no surprises." },
   { title: "Built in short rounds", body: "You see working pieces early and can change direction as we go." },
   { title: "Setup and support", body: "I move your data in, train you and your team, and stay on call when something needs fixing." },
 ];
